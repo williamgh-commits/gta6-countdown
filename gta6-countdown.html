@@ -95,7 +95,7 @@
   var TARGET = new Date(params.get("date") || "2026-11-19T00:00:00");
   var TITLE  = params.get("title") || "GTA VI";
   var SCALE  = parseFloat(params.get("scale")) || 1;
-  var OPACITY = params.has("opacity") ? parseFloat(params.get("opacity")) : 0.8; // 0.8 = 80 % synlig
+  var OPACITY = params.has("opacity") ? parseFloat(params.get("opacity")) : 1.0; // 0.8 = 80 % synlig
 
   document.getElementById("title").textContent = TITLE;
   document.getElementById("widget").style.transform = "scale(" + SCALE + ")";

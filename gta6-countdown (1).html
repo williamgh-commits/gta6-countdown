@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+<meta charset="utf-8">
+<title>GTA VI nedtælling</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Barlow+Condensed:wght@500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --sun-1: #ffd23f;
+    --sun-2: #ff8a3c;
+    --sun-3: #ff3d8b;
+    --sun-4: #b5179e;
+    --ink: rgba(18, 8, 34, 0.92);
+    --text: #ffffff;
+    --muted: rgba(255, 255, 255, 0.68);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { background: transparent; overflow: hidden; }
+  body {
+    font-family: "Barlow Condensed", "Arial Narrow", sans-serif;
+    color: var(--text);
+    display: flex; align-items: center; justify-content: center;
+    min-height: 100vh;
+  }
+  .widget {
+    position: relative;
+    width: 740px;
+    display: flex; align-items: center; gap: 28px;
+    padding: 22px 30px 26px 26px;
+    background: var(--ink);
+    border-radius: 14px;
+    overflow: hidden;
+    transform-origin: center;
+  }
+  /* Solnedgangsstribe i bunden */
+  .widget::after {
+    content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 6px;
+    background: linear-gradient(90deg, var(--sun-1), var(--sun-2), var(--sun-3), var(--sun-4));
+  }
+  .badge {
+    font-family: "Archivo Black", Impact, sans-serif;
+    font-size: 132px; line-height: 0.9;
+    padding: 0 6px 4px 0;
+    background: linear-gradient(180deg, var(--sun-1) 0%, var(--sun-2) 38%, var(--sun-3) 72%, var(--sun-4) 100%);
+    -webkit-background-clip: text; background-clip: text;
+    color: transparent;
+  }
+  .main { flex: 1; min-width: 0; }
+  .title {
+    font-family: "Archivo Black", Impact, sans-serif;
+    font-size: 24px; letter-spacing: 3px; text-transform: uppercase;
+  }
+  .sub { font-size: 22px; font-weight: 500; color: var(--muted); margin: 2px 0 12px; }
+  .clock { display: flex; align-items: stretch; }
+  .unit { flex: 1; text-align: center; padding: 0 8px; }
+  .unit + .unit { border-left: 1px solid rgba(255,255,255,.18); }
+  .num {
+    font-family: "Archivo Black", Impact, sans-serif;
+    font-size: 64px; line-height: 1;
+    font-variant-numeric: tabular-nums;
+  }
+  .label { font-size: 22px; font-weight: 600; color: var(--sun-2); margin-top: 4px; }
+  .msg { display: none; font-family: "Archivo Black", Impact, sans-serif; font-size: 40px; margin-top: 4px; }
+  .done .clock { display: none; }
+  .done .msg { display: block; }
+  .done .badge { animation: glow 1.6s ease-in-out infinite; }
+  @keyframes glow { 50% { filter: brightness(1.25); } }
+  @media (prefers-reduced-motion: reduce) { .done .badge { animation: none; } }
+</style>
+</head>
+<body>
+  <div class="widget" id="widget">
+    <div class="badge" id="badge">VI</div>
+    <div class="main">
+      <div class="title" id="title">Grand Theft Auto VI</div>
+      <div class="sub" id="sub">Nedtælling til udgivelse</div>
+      <div class="clock" id="clock">
+        <div class="unit"><div class="num" id="d">00</div><div class="label">dage</div></div>
+        <div class="unit"><div class="num" id="h">00</div><div class="label">timer</div></div>
+        <div class="unit"><div class="num" id="m">00</div><div class="label">minutter</div></div>
+        <div class="unit"><div class="num" id="s">00</div><div class="label">sekunder</div></div>
+      </div>
+      <div class="msg" id="msg">Velkommen til Vice City</div>
+    </div>
+  </div>
+
+<script>
+  /*
+    Indstillinger hentes fra config.json (samme mappe) hvert 30. sekund.
+    URL-parametre (fx ?opacity=0.6) tilsidesætter config.json.
+    Hvis config.json ikke kan hentes, bruges værdierne herunder.
+  */
+  var cfg = {
+    date: "2026-11-19T00:00:00+01:00",
+    title: "Grand Theft Auto VI",
+    subtitle: "Nedtælling til udgivelse",
+    doneText: "Velkommen til Vice City",
+    opacity: 0.8,
+    scale: 1
+  };
+  var params = new URLSearchParams(location.search);
+  var el = function (id) { return document.getElementById(id); };
+  var target = new Date(cfg.date);
+
+  function apply() {
+    ["date", "title", "subtitle", "doneText", "opacity", "scale"].forEach(function (k) {
+      if (params.has(k)) cfg[k] = params.get(k);
+    });
+    target = new Date(cfg.date);
+    el("title").textContent = cfg.title;
+    el("msg").textContent = cfg.doneText;
+    var sub = cfg.subtitle;
+    if (!isNaN(target)) {
+      sub += " · " + target.toLocaleDateString("da-DK", { day: "numeric", month: "long", year: "numeric" });
+    }
+    el("sub").textContent = sub;
+    var o = parseFloat(cfg.opacity), sc = parseFloat(cfg.scale);
+    el("widget").style.opacity = isNaN(o) ? 0.8 : o;
+    el("widget").style.transform = "scale(" + (isNaN(sc) ? 1 : sc) + ")";
+  }
+
+  function load() {
+    fetch("config.json?t=" + Date.now(), { cache: "no-store" })
+      .then(function (r) { return r.ok ? r.json() : {}; })
+      .then(function (j) { for (var k in j) cfg[k] = j[k]; apply(); })
+      .catch(function () { apply(); });
+  }
+
+  function pad(n) { return String(n).padStart(2, "0"); }
+
+  function tick() {
+    var diff = target.getTime() - Date.now();
+    if (isNaN(diff)) { el("sub").textContent = "Ugyldig dato"; return; }
+    if (diff <= 0) { el("widget").classList.add("done"); return; }
+    el("widget").classList.remove("done");
+    var s = Math.floor(diff / 1000);
+    el("d").textContent = pad(Math.floor(s / 86400));
+    el("h").textContent = pad(Math.floor(s % 86400 / 3600));
+    el("m").textContent = pad(Math.floor(s % 3600 / 60));
+    el("s").textContent = pad(s % 60);
+  }
+
+  apply();
+  load();
+  tick();
+  setInterval(tick, 250);
+  setInterval(load, 30000);
+</script>
+</body>
+</html>
